@@ -107,7 +107,7 @@ footer{color:var(--muted);font-size:12px;max-width:82ch}
 
 <header class="hero">
   <h1>Divvy Lakehouse Dashboard</h1>
-  <p class="sub">What 4.6 million Chicago bike-share trips and 1.9 million payments say about ride time and revenue, read from the Gold star schema built in Azure Databricks.</p>
+  <p class="sub">What 4.6 million Chicago bike-share trips and 1.9 million payments say about ride time and revenue, read from the Gold star schema of an Azure Databricks lakehouse project.</p>
   <div class="badges" id="badges"></div>
 </header>
 
@@ -304,7 +304,7 @@ seg("s-stn-n","stnN",[[5,"Top 5"],[10,"Top 10"]],renderStn); renderStn();
 hbars($("longend"),D.longest_end.map((r,i)=>({label:r.name,v:r.avg_min,color:i===0?"var(--accent2)":"var(--accent)",tip:`${f0(r.trips)} trips, ${f1(r.avg_min)} min average`})),v=>f0(v)+" min");
 const t1=D.top_start[0], dep=D.longest_end[0];
 $("f-stn").textContent=`${t1.name} is the busiest start station with ${f0(t1.trips)} trips, ${(100*t1.trips/K.valid_trips).toFixed(1)}% of all valid rides.`;
-$("n-depot").textContent=`${dep.name} averages ${f0(dep.avg_min)} minutes over ${f0(dep.trips)} trips, about ${(dep.avg_min/60).toFixed(0)} hours per trip. That points to a depot or maintenance location, not riding. Treat it as an outlier when comparing stations.`;
+$("n-depot").textContent=dep.avg_min>=120?`${dep.name} averages ${f0(dep.avg_min)} minutes over ${f0(dep.trips)} trips, about ${(dep.avg_min/60).toFixed(0)} hours per trip. That points to a depot or maintenance location, not riding. Treat it as an outlier when comparing stations.`:`${dep.name} has the longest average ride among stations with at least 200 trips: ${f1(dep.avg_min)} minutes over ${f0(dep.trips)} trips. Trips longer than 24 hours are already excluded.`;
 
 /* ---- 3. age x member ---- */
 const am=(t,a,k)=>{const r=D.age_member.find(x=>x.rider_type===t&&x.age_band===a);return r?r[k]:null;};
@@ -350,11 +350,14 @@ $("dq").innerHTML=`<tr><th>Check</th><th class="n">Result</th></tr>
 <tr><td>Trips loaded (CSV = Bronze = Gold)</td><td class="n">${f0(K.trips)}</td></tr>
 <tr><td>Payments loaded (CSV = Bronze = Gold)</td><td class="n">${f0(K.payments)}</td></tr>
 <tr><td>Payment total reconciles with CSV</td><td class="n">${usd2(K.total_paid)}</td></tr>
-<tr><td>Trips with negative duration (flagged, excluded from averages)</td><td class="n">${f0(q.NEGATIVE)}</td></tr>
-<tr><td>Trips with zero duration (flagged, excluded from averages)</td><td class="n">${f0(q.ZERO)}</td></tr>
-<tr><td>Trips with unmatched rider or station key</td><td class="n">0</td></tr>`;
+<tr><td>Valid trips (0 &lt; duration &le; 24 hours), used in every duration average</td><td class="n">${f0(q.OK)}</td></tr>
+<tr><td>Trips with negative duration (flagged, excluded from averages)</td><td class="n">${f0(q.NEGATIVE||0)}</td></tr>
+<tr><td>Trips with zero duration (flagged, excluded from averages)</td><td class="n">${f0(q.ZERO||0)}</td></tr>
+<tr><td>Trips longer than 24 hours (flagged, excluded from averages)</td><td class="n">${f0(q.OVER_24H||0)}</td></tr>
+<tr><td>Trips with a missing duration (flagged, excluded from averages)</td><td class="n">${f0(q.MISSING||0)}</td></tr>
+<tr><td>Trips or payments with an unmatched rider or station key</td><td class="n">${f0((K.unmatched_trip_keys||0)+(K.unmatched_payment_keys||0))}</td></tr>`;
 $("n-caveat").textContent="Caveats: is_member is the current flag, so member-versus-casual describes today's status. Trips cover one year while payments cover nine, so trip analytics and the spend comparison use only the overlap. The source links payments to riders, not to trips.";
-$("foot").textContent="Numbers come from the five Gold Delta tables (dim_rider, dim_station, dim_date, fact_trip, fact_payment). Summary tables were exported from a local replica of the notebook run in UTC; its counts and flagged-trip totals match the Azure Databricks run. Rider names and addresses are not used anywhere on this page. Your palette and view choices are remembered in this browser.";
+$("foot").textContent="Numbers come from the five Gold tables (dim_rider, dim_station, dim_date, fact_trip, fact_payment), rebuilt locally on Spark and Delta Lake (UTC) with the same transformation code as the notebook, then summarised for this page. This is a static snapshot, not a live query of Azure Databricks. The recorded Azure Databricks run used an earlier duration rule that still counted trips longer than 24 hours as valid; every other count matches it. Rider names and addresses are not used anywhere on this page. Your palette and view choices are remembered in this browser.";
 applyLook();
 </script>
 </body>

@@ -1,19 +1,21 @@
 {
  "kpi": {
   "trips": 4584921,
-  "valid_trips": 4584724,
+  "valid_trips": 4583447,
   "payments": 1946607,
   "total_paid": 19457105.25,
   "riders": 75000,
   "stations": 838,
   "member_share": 0.80165,
-  "avg_minutes": 21.7893845663707,
-  "median_minutes": 12.166666666666666
+  "avg_minutes": 19.848804066022883,
+  "median_minutes": 12.166666666666666,
+  "unmatched_trip_keys": 0,
+  "unmatched_payment_keys": 0
  },
  "quality": [
   {
    "q": "OK",
-   "n": 4584724
+   "n": 4583447
   },
   {
    "q": "ZERO",
@@ -22,6 +24,10 @@
   {
    "q": "NEGATIVE",
    "n": 116
+  },
+  {
+   "q": "OVER_24H",
+   "n": 1277
   }
  ],
  "weekday_band": [
@@ -29,574 +35,574 @@
    "dow": 1,
    "weekday": "Monday",
    "band": "Afternoon (12-17)",
-   "trips": 253691,
-   "avg_min": 21.91193952485491,
-   "total_min": 5558861.849999966
+   "trips": 253627,
+   "avg_min": 20.317455160530827,
+   "total_min": 5153055.199999952
   },
   {
    "dow": 1,
    "weekday": "Monday",
    "band": "Evening (18-23)",
-   "trips": 163823,
-   "avg_min": 20.337568290166757,
-   "total_min": 3331761.4499999885
+   "trips": 163774,
+   "avg_min": 18.784801515095964,
+   "total_min": 3076462.0833333265
   },
   {
    "dow": 1,
    "weekday": "Monday",
    "band": "Morning (06-11)",
-   "trips": 138901,
-   "avg_min": 17.342200920079836,
-   "total_min": 2408849.050000009
+   "trips": 138881,
+   "avg_min": 16.61072164898973,
+   "total_min": 2306913.6333333426
   },
   {
    "dow": 1,
    "weekday": "Monday",
    "band": "Night (00-05)",
-   "trips": 19673,
-   "avg_min": 29.558335451295303,
-   "total_min": 581501.1333333325
+   "trips": 19653,
+   "avg_min": 22.437695686833173,
+   "total_min": 440968.03333333234
   },
   {
    "dow": 2,
    "weekday": "Tuesday",
    "band": "Afternoon (12-17)",
-   "trips": 255391,
-   "avg_min": 18.98334318750473,
-   "total_min": 4848175.0000000205
+   "trips": 255338,
+   "avg_min": 18.039805473529338,
+   "total_min": 4606247.850000034
   },
   {
    "dow": 2,
    "weekday": "Tuesday",
    "band": "Evening (18-23)",
-   "trips": 181945,
-   "avg_min": 19.211982558831792,
-   "total_min": 3495524.16666665
+   "trips": 181910,
+   "avg_min": 17.82299461272047,
+   "total_min": 3242180.949999981
   },
   {
    "dow": 2,
    "weekday": "Tuesday",
    "band": "Morning (06-11)",
-   "trips": 152370,
-   "avg_min": 15.17665419702036,
-   "total_min": 2312466.7999999924
+   "trips": 152354,
+   "avg_min": 14.69368280452098,
+   "total_min": 2238641.3499999894
   },
   {
    "dow": 2,
    "weekday": "Tuesday",
    "band": "Night (00-05)",
-   "trips": 15054,
-   "avg_min": 22.367457154244715,
-   "total_min": 336719.69999999995
+   "trips": 15045,
+   "avg_min": 18.118464606181462,
+   "total_min": 272592.3000000001
   },
   {
    "dow": 3,
    "weekday": "Wednesday",
    "band": "Afternoon (12-17)",
-   "trips": 251994,
-   "avg_min": 19.027067112708927,
-   "total_min": 4794706.749999973
+   "trips": 251938,
+   "avg_min": 17.42321080318695,
+   "total_min": 4389568.883333314
   },
   {
    "dow": 3,
    "weekday": "Wednesday",
    "band": "Evening (18-23)",
-   "trips": 194353,
-   "avg_min": 18.81575509511038,
-   "total_min": 3656898.4499999876
+   "trips": 194315,
+   "avg_min": 17.320050948202617,
+   "total_min": 3365545.699999992
   },
   {
    "dow": 3,
    "weekday": "Wednesday",
    "band": "Morning (06-11)",
-   "trips": 154447,
-   "avg_min": 14.984053645155496,
-   "total_min": 2314242.133333331
+   "trips": 154430,
+   "avg_min": 14.33332124587194,
+   "total_min": 2213494.8000000035
   },
   {
    "dow": 3,
    "weekday": "Wednesday",
    "band": "Night (00-05)",
-   "trips": 15498,
-   "avg_min": 22.588460876672293,
-   "total_min": 350075.9666666672
+   "trips": 15489,
+   "avg_min": 17.80869003809157,
+   "total_min": 275838.80000000034
   },
   {
    "dow": 4,
    "weekday": "Thursday",
    "band": "Afternoon (12-17)",
-   "trips": 241188,
-   "avg_min": 18.78340803301437,
-   "total_min": 4530332.61666667
+   "trips": 241145,
+   "avg_min": 17.46429299107734,
+   "total_min": 4211426.933333345
   },
   {
    "dow": 4,
    "weekday": "Thursday",
    "band": "Evening (18-23)",
-   "trips": 196412,
-   "avg_min": 19.885320313083326,
-   "total_min": 3905715.5333333225
+   "trips": 196353,
+   "avg_min": 17.38342415615409,
+   "total_min": 3413287.483333324
   },
   {
    "dow": 4,
    "weekday": "Thursday",
    "band": "Morning (06-11)",
-   "trips": 144111,
-   "avg_min": 14.947640707510184,
-   "total_min": 2154119.45
+   "trips": 144095,
+   "avg_min": 14.436043582358868,
+   "total_min": 2080161.7000000011
   },
   {
    "dow": 4,
    "weekday": "Thursday",
    "band": "Night (00-05)",
-   "trips": 16570,
-   "avg_min": 19.557899818949938,
-   "total_min": 324074.4000000005
+   "trips": 16562,
+   "avg_min": 17.301057641991736,
+   "total_min": 286540.11666666716
   },
   {
    "dow": 5,
    "weekday": "Friday",
    "band": "Afternoon (12-17)",
-   "trips": 285967,
-   "avg_min": 21.56608979357766,
-   "total_min": 6167190.000000022
+   "trips": 285896,
+   "avg_min": 19.411407411552933,
+   "total_min": 5549643.733333337
   },
   {
    "dow": 5,
    "weekday": "Friday",
    "band": "Evening (18-23)",
-   "trips": 200653,
-   "avg_min": 22.191042579311876,
-   "total_min": 4452699.266666666
+   "trips": 200584,
+   "avg_min": 19.36747987543038,
+   "total_min": 3884806.5833333274
   },
   {
    "dow": 5,
    "weekday": "Friday",
    "band": "Morning (06-11)",
-   "trips": 143850,
-   "avg_min": 16.68532105202179,
-   "total_min": 2400183.4333333345
+   "trips": 143837,
+   "avg_min": 16.40059975296114,
+   "total_min": 2359013.066666671
   },
   {
    "dow": 5,
    "weekday": "Friday",
    "band": "Night (00-05)",
-   "trips": 22925,
-   "avg_min": 25.07299454743723,
-   "total_min": 574798.3999999985
+   "trips": 22906,
+   "avg_min": 18.33432361244509,
+   "total_min": 419966.0166666672
   },
   {
    "dow": 6,
    "weekday": "Saturday",
    "band": "Afternoon (12-17)",
-   "trips": 382121,
-   "avg_min": 26.762377972771382,
-   "total_min": 10226466.633333374
+   "trips": 382005,
+   "avg_min": 25.02961374851132,
+   "total_min": 9561437.600000067
   },
   {
    "dow": 6,
    "weekday": "Saturday",
    "band": "Evening (18-23)",
-   "trips": 212054,
-   "avg_min": 27.555657364004873,
-   "total_min": 5843287.3666666895
+   "trips": 211944,
+   "avg_min": 22.956222477006612,
+   "total_min": 4865433.6166666895
   },
   {
    "dow": 6,
    "weekday": "Saturday",
    "band": "Morning (06-11)",
-   "trips": 174652,
-   "avg_min": 22.720898796845514,
-   "total_min": 3968250.416666663
+   "trips": 174623,
+   "avg_min": 22.17225355957311,
+   "total_min": 3871785.4333333354
   },
   {
    "dow": 6,
    "weekday": "Saturday",
    "band": "Night (00-05)",
-   "trips": 53618,
-   "avg_min": 28.08698322702569,
-   "total_min": 1505967.8666666634
+   "trips": 53582,
+   "avg_min": 21.504785500105736,
+   "total_min": 1152269.4166666656
   },
   {
    "dow": 7,
    "weekday": "Sunday",
    "band": "Afternoon (12-17)",
-   "trips": 353292,
-   "avg_min": 28.385404707720564,
-   "total_min": 10028336.400000013
+   "trips": 353161,
+   "avg_min": 25.914970131658677,
+   "total_min": 9152156.76666671
   },
   {
    "dow": 7,
    "weekday": "Sunday",
    "band": "Evening (18-23)",
-   "trips": 150179,
-   "avg_min": 27.091362529603554,
-   "total_min": 4068553.733333332
+   "trips": 150100,
+   "avg_min": 23.4354189429269,
+   "total_min": 3517656.3833333277
   },
   {
    "dow": 7,
    "weekday": "Sunday",
    "band": "Morning (06-11)",
-   "trips": 146772,
-   "avg_min": 26.288940896992166,
-   "total_min": 3858480.433333334
+   "trips": 146728,
+   "avg_min": 24.357889655235063,
+   "total_min": 3573984.4333333303
   },
   {
    "dow": 7,
    "weekday": "Sunday",
    "band": "Night (00-05)",
-   "trips": 63220,
-   "avg_min": 30.054982073183474,
-   "total_min": 1900075.9666666593
+   "trips": 63172,
+   "avg_min": 23.663372749530325,
+   "total_min": 1494862.5833333298
   }
  ],
  "hourly": [
   {
    "h": 0,
-   "trips": 67743,
-   "avg_min": 26.179886728764096
+   "trips": 67712,
+   "avg_min": 22.034071016461823
   },
   {
    "h": 1,
-   "trips": 47272,
-   "avg_min": 30.020882340497568
+   "trips": 47231,
+   "avg_min": 23.124457806666513
   },
   {
    "h": 2,
-   "trips": 28748,
-   "avg_min": 33.69888513983591
+   "trips": 28714,
+   "avg_min": 23.740687469527092
   },
   {
    "h": 3,
-   "trips": 15371,
-   "avg_min": 34.42508294840934
+   "trips": 15350,
+   "avg_min": 24.222814332247545
   },
   {
    "h": 4,
-   "trips": 12719,
-   "avg_min": 31.058859449118074
+   "trips": 12703,
+   "avg_min": 19.212284499724454
   },
   {
    "h": 5,
-   "trips": 34705,
-   "avg_min": 14.04987994045047
+   "trips": 34699,
+   "avg_min": 13.294649221399284
   },
   {
    "h": 6,
-   "trips": 90927,
-   "avg_min": 13.521763245973927
+   "trips": 90921,
+   "avg_min": 12.976660874092191
   },
   {
    "h": 7,
-   "trips": 166641,
-   "avg_min": 13.863472474761174
+   "trips": 166629,
+   "avg_min": 13.340809522952215
   },
   {
    "h": 8,
-   "trips": 199715,
-   "avg_min": 14.776772984836716
+   "trips": 199698,
+   "avg_min": 14.291514770636981
   },
   {
    "h": 9,
-   "trips": 169062,
-   "avg_min": 18.42946069094973
+   "trips": 169039,
+   "avg_min": 17.97648708286256
   },
   {
    "h": 10,
-   "trips": 190220,
-   "avg_min": 22.478122700031566
+   "trips": 190176,
+   "avg_min": 21.37271641356781
   },
   {
    "h": 11,
-   "trips": 238538,
-   "avg_min": 23.20058956364762
+   "trips": 238485,
+   "avg_min": 22.156050275698796
   },
   {
    "h": 12,
-   "trips": 279484,
-   "avg_min": 23.276024149265623
+   "trips": 279411,
+   "avg_min": 21.747453094783925
   },
   {
    "h": 13,
-   "trips": 284922,
-   "avg_min": 24.468543964078886
+   "trips": 284848,
+   "avg_min": 22.836488349341728
   },
   {
    "h": 14,
-   "trips": 286966,
-   "avg_min": 24.9643202214433
+   "trips": 286876,
+   "avg_min": 22.945049138536092
   },
   {
    "h": 15,
-   "trips": 317500,
-   "avg_min": 23.933968713910982
+   "trips": 317396,
+   "avg_min": 21.668017397825125
   },
   {
    "h": 16,
-   "trips": 384625,
-   "avg_min": 21.594207648141996
+   "trips": 384533,
+   "avg_min": 19.942081347157863
   },
   {
    "h": 17,
-   "trips": 470147,
-   "avg_min": 20.43732733237326
+   "trips": 470046,
+   "avg_min": 18.964137517037233
   },
   {
    "h": 18,
-   "trips": 404494,
-   "avg_min": 20.771921709592725
+   "trips": 404399,
+   "avg_min": 18.75795109945039
   },
   {
    "h": 19,
-   "trips": 296188,
-   "avg_min": 21.2923571065225
+   "trips": 296106,
+   "avg_min": 19.225788737816913
   },
   {
    "h": 20,
-   "trips": 204393,
-   "avg_min": 22.31822436841449
+   "trips": 204321,
+   "avg_min": 19.755118498180124
   },
   {
    "h": 21,
-   "trips": 160407,
-   "avg_min": 22.93550021715594
+   "trips": 160338,
+   "avg_min": 19.947773869367584
   },
   {
    "h": 22,
-   "trips": 135188,
-   "avg_min": 24.13454830803529
+   "trips": 135117,
+   "avg_min": 20.499169238511907
   },
   {
    "h": 23,
-   "trips": 98749,
-   "avg_min": 25.74584721533039
+   "trips": 98699,
+   "avg_min": 21.09693867212428
   }
  ],
  "monthly_trips": [
   {
    "ym": "2021-02",
-   "trips": 42994,
-   "avg_min": 21.263070428431877
+   "trips": 42971,
+   "avg_min": 17.96498413658825
   },
   {
    "ym": "2021-03",
-   "trips": 205687,
-   "avg_min": 22.791035651256163
+   "trips": 205596,
+   "avg_min": 20.47304511436677
   },
   {
    "ym": "2021-04",
-   "trips": 298199,
-   "avg_min": 24.02685510906004
+   "trips": 298089,
+   "avg_min": 21.449883088607407
   },
   {
    "ym": "2021-05",
-   "trips": 450978,
-   "avg_min": 26.5037374328679
+   "trips": 450760,
+   "avg_min": 23.357698294731886
   },
   {
    "ym": "2021-06",
-   "trips": 608763,
-   "avg_min": 26.32226257728126
+   "trips": 608507,
+   "avg_min": 22.427531017172328
   },
   {
    "ym": "2021-07",
-   "trips": 692293,
-   "avg_min": 24.193454962950963
+   "trips": 692099,
+   "avg_min": 21.613087241371915
   },
   {
    "ym": "2021-08",
-   "trips": 674377,
-   "avg_min": 21.15389198722197
+   "trips": 674267,
+   "avg_min": 20.40037094602998
   },
   {
    "ym": "2021-09",
-   "trips": 621103,
-   "avg_min": 20.185343842593827
+   "trips": 621004,
+   "avg_min": 19.290432267746976
   },
   {
    "ym": "2021-10",
-   "trips": 477966,
-   "avg_min": 17.672520953373482
+   "trips": 477880,
+   "avg_min": 16.89139229513714
   },
   {
    "ym": "2021-11",
-   "trips": 255867,
-   "avg_min": 14.104369457569854
+   "trips": 255829,
+   "avg_min": 13.456662783864799
   },
   {
    "ym": "2021-12",
-   "trips": 176369,
-   "avg_min": 14.226382754339198
+   "trips": 176334,
+   "avg_min": 13.020745195670418
   },
   {
    "ym": "2022-01",
-   "trips": 80128,
-   "avg_min": 12.957628627529257
+   "trips": 80111,
+   "avg_min": 11.496551451527631
   }
  ],
  "top_start": [
   {
    "name": "Streeter Dr & Grand Ave",
-   "trips": 80336,
-   "avg_min": 38.98547226648065
+   "trips": 80299,
+   "avg_min": 35.72174373279862
   },
   {
    "name": "Lake Shore Dr & North Blvd",
-   "trips": 46378,
-   "avg_min": 29.180465594319156
+   "trips": 46361,
+   "avg_min": 26.133233752507497
   },
   {
    "name": "Lake Shore Dr & Monroe St",
-   "trips": 44672,
-   "avg_min": 39.912819737941845
+   "trips": 44643,
+   "avg_min": 36.86054849957817
   },
   {
    "name": "Michigan Ave & Oak St",
-   "trips": 42721,
-   "avg_min": 36.32731092436979
+   "trips": 42711,
+   "avg_min": 33.710179266855604
   },
   {
    "name": "Wells St & Concord Ln",
-   "trips": 41601,
-   "avg_min": 15.849009639191374
+   "trips": 41597,
+   "avg_min": 15.594978403891318
   },
   {
    "name": "Millennium Park",
-   "trips": 40505,
-   "avg_min": 48.2799234662387
+   "trips": 40463,
+   "avg_min": 38.62679443771676
   },
   {
    "name": "Clark St & Elm St",
-   "trips": 39345,
-   "avg_min": 17.436833142711876
+   "trips": 39338,
+   "avg_min": 15.478061077499271
   },
   {
    "name": "Wells St & Elm St",
-   "trips": 35955,
-   "avg_min": 13.905837852871676
+   "trips": 35953,
+   "avg_min": 13.806489027341279
   },
   {
    "name": "Theater on the Lake",
-   "trips": 35703,
-   "avg_min": 29.267610098124354
+   "trips": 35693,
+   "avg_min": 28.179660811176795
   },
   {
    "name": "Kingsbury St & Kinzie St",
-   "trips": 32420,
-   "avg_min": 11.877376105284789
+   "trips": 32419,
+   "avg_min": 11.832264515664669
   }
  ],
  "longest_end": [
   {
    "name": "Base - 2132 W Hubbard Warehouse",
-   "trips": 468,
-   "avg_min": 3750.461146723647
+   "trips": 338,
+   "avg_min": 170.99497041420116
   },
   {
-   "name": "Cottage Grove Ave & 83rd St",
-   "trips": 201,
-   "avg_min": 153.27180762852402
+   "name": "Lawndale Ave & 111th St",
+   "trips": 216,
+   "avg_min": 53.37561728395062
   },
   {
-   "name": "Kedzie Ave & Roosevelt Rd",
-   "trips": 359,
-   "avg_min": 144.79521819870004
+   "name": "Stony Island Ave & 71st St",
+   "trips": 416,
+   "avg_min": 51.620753205128196
   },
   {
-   "name": "MLK Jr Dr & 63rd St",
-   "trips": 388,
-   "avg_min": 137.53290378006875
+   "name": "Jeffery Blvd & 67th St",
+   "trips": 552,
+   "avg_min": 50.9066425120773
   },
   {
-   "name": "Lincolnwood Dr & Central St",
-   "trips": 797,
-   "avg_min": 127.11093684650776
+   "name": "Calumet Park",
+   "trips": 367,
+   "avg_min": 50.491643960036335
   }
  ],
  "age_member": [
   {
    "age_band": "18-24",
    "rider_type": "casual",
-   "trips": 207362,
-   "avg_min": 21.330723645926742
+   "trips": 207308,
+   "avg_min": 19.513650462114335
   },
   {
    "age_band": "18-24",
    "rider_type": "member",
-   "trips": 801133,
-   "avg_min": 21.984940141025145
+   "trips": 800887,
+   "avg_min": 19.82505274360358
   },
   {
    "age_band": "25-34",
    "rider_type": "casual",
-   "trips": 299030,
-   "avg_min": 21.161776131714852
+   "trips": 298964,
+   "avg_min": 19.822701172493556
   },
   {
    "age_band": "25-34",
    "rider_type": "member",
-   "trips": 1216984,
-   "avg_min": 22.23532901829457
+   "trips": 1216612,
+   "avg_min": 19.950299575104385
   },
   {
    "age_band": "35-44",
    "rider_type": "casual",
-   "trips": 215633,
-   "avg_min": 20.963906112082448
+   "trips": 215584,
+   "avg_min": 19.918308872643642
   },
   {
    "age_band": "35-44",
    "rider_type": "member",
-   "trips": 848192,
-   "avg_min": 21.863068306861233
+   "trips": 847957,
+   "avg_min": 19.88829712670174
   },
   {
    "age_band": "45-54",
    "rider_type": "casual",
-   "trips": 95638,
-   "avg_min": 22.190734854346566
+   "trips": 95610,
+   "avg_min": 19.752896140571128
   },
   {
    "age_band": "45-54",
    "rider_type": "member",
-   "trips": 378882,
-   "avg_min": 20.504800043285247
+   "trips": 378799,
+   "avg_min": 19.199413981205527
   },
   {
    "age_band": "55-64",
    "rider_type": "casual",
-   "trips": 32308,
-   "avg_min": 21.748198072716853
+   "trips": 32298,
+   "avg_min": 19.99183798790437
   },
   {
    "age_band": "55-64",
    "rider_type": "member",
-   "trips": 124433,
-   "avg_min": 21.844438908220948
+   "trips": 124399,
+   "avg_min": 20.02168385597959
   },
   {
    "age_band": "65+",
    "rider_type": "casual",
-   "trips": 7620,
-   "avg_min": 22.65689195100613
+   "trips": 7618,
+   "avg_min": 20.365644963682513
   },
   {
    "age_band": "65+",
    "rider_type": "member",
-   "trips": 22078,
-   "avg_min": 23.147365401455456
+   "trips": 22072,
+   "avg_min": 20.458015434336115
   },
   {
    "age_band": "<18",
    "rider_type": "casual",
-   "trips": 60981,
-   "avg_min": 21.636274959960204
+   "trips": 60961,
+   "avg_min": 19.489573661849317
   },
   {
    "age_band": "<18",
    "rider_type": "member",
-   "trips": 274450,
-   "avg_min": 22.206430679541054
+   "trips": 274378,
+   "avg_min": 20.424288633442536
   }
  ],
  "pay_year": [
@@ -849,55 +855,55 @@
  "spend_by_rides": [
   {
    "band": "0",
-   "riders": 37291,
-   "avg_spend": 83.15334584752355
+   "riders": 37297,
+   "avg_spend": 83.15324074322334
   },
   {
    "band": "<1",
-   "riders": 9734,
-   "avg_spend": 83.01372816930348
+   "riders": 9730,
+   "avg_spend": 83.00345632065776
   },
   {
    "band": "1-3",
    "riders": 4852,
-   "avg_spend": 84.16532563891178
+   "avg_spend": 84.1820197856554
   },
   {
    "band": "3-6",
    "riders": 5048,
-   "avg_spend": 83.00968700475437
+   "avg_spend": 83.02395007923931
   },
   {
    "band": "6+",
-   "riders": 18075,
-   "avg_spend": 83.00836846473035
+   "riders": 18073,
+   "avg_spend": 83.00560283295529
   }
  ],
  "spend_by_minutes": [
   {
    "band": "0",
-   "riders": 37291,
-   "avg_spend": 83.15334584752355
+   "riders": 37297,
+   "avg_spend": 83.15324074322334
   },
   {
    "band": "<10",
-   "riders": 6425,
-   "avg_spend": 82.47293696498055
+   "riders": 6450,
+   "avg_spend": 82.50549767441859
   },
   {
    "band": "10-30",
-   "riders": 4485,
-   "avg_spend": 82.85243032329988
+   "riders": 4519,
+   "avg_spend": 82.95458951095374
   },
   {
    "band": "30-60",
-   "riders": 3756,
-   "avg_spend": 84.42122470713524
+   "riders": 3800,
+   "avg_spend": 84.33537368421052
   },
   {
    "band": "60+",
-   "riders": 23043,
-   "avg_spend": 83.2038823069913
+   "riders": 22934,
+   "avg_spend": 83.18798639574432
   }
  ]
 }

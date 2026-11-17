@@ -124,6 +124,10 @@ Done by hand in the built-in browser, not automated, on the final `dashboard/ind
 - The theme button cycles automatic, light, dark and back.
 - At a 375 px wide phone viewport the page has no horizontal overflow (`scrollWidth` equals `innerWidth`). I could not capture a screenshot of the phone layout in that session, so its visual quality was not inspected.
 
+## 6a. Live deployment check
+
+On 17 November 2026, after GitHub Pages was enabled (branch `main`, folder `/`), the public URL `https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/` returned HTTP 200, as did `/` and `/dashboard/data.json`. In a real browser the page showed the title, 11 SVG charts, the six sections and all KPI and quality figures, with no `undefined` or `NaN` in the text and no console errors on a clean load. The seven controls produced distinct views, and the served `data.json` equals the committed file (4,583,447 valid trips, 1,277 over 24 hours). Not checked on the live site: other browsers, and the phone layout beyond the earlier overflow measurement.
+
 ## 7. Privacy review
 
 | Item | Finding | Action |
@@ -146,5 +150,4 @@ The riders file is synthetic (generated names and addresses), which lowers the r
 - Behaviour on Databricks runtimes other than 15.4 LTS.
 - Phone layout appearance (only overflow was measured), and browsers other than Chromium.
 - Dashboard performance, accessibility audit and screen reader behaviour.
-- The public GitHub Pages URL: Pages is not configured yet (see the README).
 - The licence terms of the source data.

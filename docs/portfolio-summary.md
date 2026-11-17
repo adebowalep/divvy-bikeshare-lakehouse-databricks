@@ -37,7 +37,7 @@ The first version counted every positive duration as valid. When I compared its 
 ## Links
 
 - Repository: https://github.com/adebowalep/divvy-bikeshare-lakehouse-databricks
-- Live dashboard: **not published yet.** Add `https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/` here only after Pages is enabled and the link has been checked.
+- Live dashboard: https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/ (verified live)
 - Related project (Azure Synapse and SQL, same dataset): https://github.com/adebowalep/divvy-azure-data-warehouse
 
 ## Skills

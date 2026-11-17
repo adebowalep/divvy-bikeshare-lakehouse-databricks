@@ -6,6 +6,7 @@
 [![Unity Catalog](https://img.shields.io/badge/Unity_Catalog-1B3139?style=flat)](https://learn.microsoft.com/azure/databricks/data-governance/unity-catalog/)
 [![Spark SQL](https://img.shields.io/badge/Spark_SQL-E25A1C?style=flat)](https://spark.apache.org/sql/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat)](https://www.python.org/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-dashboard-222222?style=flat)](https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/)
 
 A Bronze-to-Gold data lakehouse for 4.6 million Chicago Divvy bike-share trips and 1.9 million rider payments, built with PySpark, Spark SQL and Delta Lake on Azure Databricks with Unity Catalog. It turns four headerless CSV files into a governed star schema, checks its own results, and answers business questions about ride time and revenue. A static dashboard presents the findings.
 
@@ -17,8 +18,8 @@ The project started from a Udacity Data Lakes brief with no starter code. The no
 
 The dashboard shows ride time by weekday and time of day, busiest stations, rider age and membership, revenue by year and quarter, spend against riding, and a data-quality panel. It has a light and dark theme, four colour palettes and switchable chart views.
 
-- **Live link:** not published yet. GitHub Pages is not enabled for this repository, so the URL `https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/` returns 404 at the time of writing. To publish it: Settings, Pages, deploy from branch `main`, folder `/ (root)`.
-- **Run it now:** clone the repository and open [`dashboard/index.html`](dashboard/index.html) in a browser. All data is embedded. The only outside request is for two optional web fonts (Google Fonts); without them the page uses system fonts.
+- **Live link:** https://adebowalep.github.io/divvy-bikeshare-lakehouse-databricks/dashboard/ (checked in a browser on 17 November 2026: loads, 11 charts render, no console errors, all controls respond, numbers match `data.json`).
+- **Run it offline:** clone the repository and open [`dashboard/index.html`](dashboard/index.html) in a browser. All data is embedded. The only outside request is for two optional web fonts (Google Fonts); without them the page uses system fonts.
 - **What it is not:** a live Databricks dashboard. It is a static snapshot. The Gold tables were rebuilt locally from the same code and summarised into [`dashboard/data.json`](dashboard/data.json), because the lab workspace is temporary.
 
 Full-length captures: [light](docs/images/dashboard-overview.png), [dark](docs/images/dashboard-overview-dark.png).

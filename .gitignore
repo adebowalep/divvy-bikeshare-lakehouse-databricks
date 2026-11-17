@@ -1,0 +1,13 @@
+# Raw data (large, downloaded from the Udacity course resources)
+data/
+*.csv
+azure-data-lakehouse-projectdatafiles.zip
+
+# Lab screenshots show a temporary lab username; blur or crop them before publishing
+evidence/ui_screenshots/
+
+.DS_Store
+__pycache__/
+.edgeprof*
+*.pyc
+Divvy_Databricks_Lakehouse_Submission.zip

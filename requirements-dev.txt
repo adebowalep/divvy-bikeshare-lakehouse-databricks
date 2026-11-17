@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest>=8
+nbformat>=5.9          # build_notebook.py
+nbconvert>=7.16        # render_evidence.py
+pillow>=10             # screenshot cropping
+reportlab>=4           # draw_star_schema.py
+pymupdf>=1.24          # optional: PDF -> PNG of the star schema

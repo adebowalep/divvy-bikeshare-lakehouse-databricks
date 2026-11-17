@@ -1,0 +1,4 @@
+# Needed only for the local replica, the tests and the dashboard export (not for running in Databricks,
+# where Spark and Delta Lake are provided by the runtime). Versions below are the ones the tests were run with.
+pyspark==3.5.3
+delta-spark==3.2.1

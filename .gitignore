@@ -11,3 +11,12 @@ __pycache__/
 .edgeprof*
 *.pyc
 Divvy_Databricks_Lakehouse_Submission.zip
+
+# Local tooling
+.pytest_cache/
+.venv/
+venv/
+spark-warehouse/
+metastore_db/
+derby.log
+work/

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 810" width="1500" height="810" font-family="Helvetica, Arial, sans-serif">
+<title>Divvy lakehouse architecture</title>
+<desc>Four CSV files in a Unity Catalog volume are ingested with PySpark into Bronze Delta files and managed Bronze Delta tables, transformed into a Gold Delta star schema, then analysed with Spark SQL and validated. A local export of Gold summary tables feeds a static dashboard on GitHub Pages.</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker></defs>
+<rect width="1500" height="810" fill="#FFFFFF"/>
+<text x="40" y="44" font-size="26" font-weight="700" fill="#0F172A">Divvy Bike-Share lakehouse: Bronze to Gold</text>
+<rect x="285" y="70" width="1180" height="415" rx="14" fill="none" stroke="#1F6FB5" stroke-width="2"/>
+<text x="301" y="96" font-size="15" font-weight="700" fill="#1F6FB5">Azure Databricks workspace  -  Unity Catalog</text>
+<rect x="15" y="505" width="810" height="170" rx="14" fill="none" stroke="#C77700" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="31" y="531" font-size="15" font-weight="700" fill="#C77700">Offline on a local machine (not connected to the workspace)</text>
+<line x1="260" y1="166.0" x2="310" y2="166.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="530" y1="166.0" x2="580" y2="166.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="800" y1="166.0" x2="850" y2="166.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="1070" y1="166.0" x2="1120" y2="166.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="1230.0" y1="212" x2="1230.0" y2="305" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="1120" y1="351.0" x2="1070" y2="351.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="850" y1="351.0" x2="800" y2="296.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="850" y1="351.0" x2="800" y2="406.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="960.0" y1="397" x2="800" y2="591.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)" stroke-dasharray="7 5"/>
+<text x="894.0" y="494.0" font-size="13" font-style="italic" fill="#475569">same code, rebuilt locally</text>
+<line x1="580" y1="591.0" x2="530" y2="591.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<line x1="310" y1="591.0" x2="260" y2="591.0" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
+<rect x="40" y="120" width="220" height="92" rx="10" fill="#F1F5F9" stroke="#64748B" stroke-width="2"/>
+<text x="150.0" y="150" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Four Divvy CSV files</text>
+<text x="150.0" y="174" font-size="13" text-anchor="middle" fill="#334155">riders, payments, stations, trips</text>
+<text x="150.0" y="194" font-size="12" text-anchor="middle" fill="#64748B">no header row; ~4.6M trips</text>
+<rect x="310" y="120" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="420.0" y="150" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Unity Catalog volume</text>
+<text x="420.0" y="174" font-size="13" text-anchor="middle" fill="#334155">/Volumes/.../raw</text>
+<text x="420.0" y="194" font-size="12" text-anchor="middle" fill="#64748B">CSV files are never modified</text>
+<rect x="580" y="120" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="690.0" y="150" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">PySpark ingestion</text>
+<text x="690.0" y="174" font-size="13" text-anchor="middle" fill="#334155">explicit string schema + try_cast</text>
+<text x="690.0" y="194" font-size="12" text-anchor="middle" fill="#64748B">parse failures counted</text>
+<rect x="850" y="120" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="960.0" y="150" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Bronze Delta files</text>
+<text x="960.0" y="174" font-size="13" text-anchor="middle" fill="#334155">volume /bronze_delta/&lt;entity&gt;</text>
+<text x="960.0" y="194" font-size="12" text-anchor="middle" fill="#64748B">overwrite, row counts checked</text>
+<rect x="1120" y="120" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="1230.0" y="150" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Bronze Delta tables</text>
+<text x="1230.0" y="174" font-size="13" text-anchor="middle" fill="#334155">divvy_bronze.* (managed)</text>
+<text x="1230.0" y="194" font-size="12" text-anchor="middle" fill="#64748B">CREATE + INSERT OVERWRITE</text>
+<rect x="1120" y="305" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="1230.0" y="335" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">PySpark transformations</text>
+<text x="1230.0" y="359" font-size="13" text-anchor="middle" fill="#334155">dedupe, surrogate keys, joins</text>
+<text x="1230.0" y="379" font-size="12" text-anchor="middle" fill="#64748B">age, duration_quality, date keys</text>
+<rect x="850" y="305" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="960.0" y="335" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Gold Delta star schema</text>
+<text x="960.0" y="359" font-size="13" text-anchor="middle" fill="#334155">divvy_gold: 3 dims + 2 facts</text>
+<text x="960.0" y="379" font-size="12" text-anchor="middle" fill="#64748B">saveAsTable, mode overwrite</text>
+<rect x="580" y="250" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="690.0" y="280" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Spark SQL analytics</text>
+<text x="690.0" y="304" font-size="13" text-anchor="middle" fill="#334155">ride time, stations, payments</text>
+<text x="690.0" y="324" font-size="12" text-anchor="middle" fill="#64748B">spend vs riding</text>
+<rect x="580" y="360" width="220" height="92" rx="10" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/>
+<text x="690.0" y="390" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Data validation</text>
+<text x="690.0" y="414" font-size="13" text-anchor="middle" fill="#334155">assertions + diagnostics</text>
+<text x="690.0" y="434" font-size="12" text-anchor="middle" fill="#64748B">counts, keys, amounts, rebuild</text>
+<rect x="580" y="545" width="220" height="92" rx="10" fill="#FFF4E0" stroke="#C77700" stroke-width="2"/>
+<text x="690.0" y="575" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Local rebuild + export</text>
+<text x="690.0" y="599" font-size="13" text-anchor="middle" fill="#334155">same code on Spark + Delta, laptop</text>
+<text x="690.0" y="619" font-size="12" text-anchor="middle" fill="#64748B">summary tables only</text>
+<rect x="310" y="545" width="220" height="92" rx="10" fill="#FFF4E0" stroke="#C77700" stroke-width="2"/>
+<text x="420.0" y="575" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">Static dashboard</text>
+<text x="420.0" y="599" font-size="13" text-anchor="middle" fill="#334155">dashboard/index.html</text>
+<text x="420.0" y="619" font-size="12" text-anchor="middle" fill="#64748B">data embedded, no backend</text>
+<rect x="40" y="545" width="220" height="92" rx="10" fill="#FFF4E0" stroke="#C77700" stroke-width="2"/>
+<text x="150.0" y="575" font-size="16" font-weight="700" text-anchor="middle" fill="#0F172A">GitHub Pages</text>
+<text x="150.0" y="599" font-size="13" text-anchor="middle" fill="#334155">free static hosting</text>
+<text x="150.0" y="619" font-size="12" text-anchor="middle" fill="#64748B">status: see README</text>
+<text x="40" y="725" font-size="14" fill="#334155">There is no separate Silver layer: typing and quality checks happen during Bronze ingestion, and the dimensional transformations produce Gold directly.</text>
+<text x="40" y="749" font-size="14" fill="#334155">The dashboard is a static snapshot exported from the Gold tables; it does not query Azure Databricks.</text>
+<g font-size="13" fill="#334155"><rect x="40" y="770" width="18" height="18" rx="4" fill="#F1F5F9" stroke="#64748B" stroke-width="2"/><text x="66" y="784">Source data</text><rect x="190" y="770" width="18" height="18" rx="4" fill="#E6F0FB" stroke="#1F6FB5" stroke-width="2"/><text x="216" y="784">Runs in Azure Databricks</text><rect x="420" y="770" width="18" height="18" rx="4" fill="#FFF4E0" stroke="#C77700" stroke-width="2"/><text x="446" y="784">Offline / static publishing</text></g>
+</svg>

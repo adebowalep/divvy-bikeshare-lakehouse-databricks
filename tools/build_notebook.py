@@ -1,10 +1,43 @@
-"""Generates Divvy_Databricks_Lakehouse.ipynb (source cells only, no outputs).
-Run: python build_notebook.py <out.ipynb>
+"""Generates the SOURCE-ONLY Databricks notebook (no outputs) from this script and src/divvy_transforms.py.
+
+Usage:  python tools/build_notebook.py [--out PATH]
+Default output: notebooks/Divvy_Databricks_Lakehouse.ipynb (relative to the repository root).
+
+The generator refuses to overwrite a notebook that contains saved outputs, so an executed notebook
+(Azure run evidence) can never be destroyed by regenerating the source.
 """
+import argparse
+import json
+import re
 import sys
+from pathlib import Path
+
 import nbformat as nbf
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "Divvy_Databricks_Lakehouse.ipynb"
+ROOT = Path(__file__).resolve().parents[1]
+ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+ap.add_argument("--out", type=Path, default=ROOT / "notebooks" / "Divvy_Databricks_Lakehouse.ipynb")
+OUT = ap.parse_args().out.resolve()
+
+if OUT.exists():
+    existing = json.loads(OUT.read_text())
+    if any(c.get("outputs") for c in existing.get("cells", []) if c.get("cell_type") == "code"):
+        sys.exit(f"Refusing to overwrite {OUT}: it contains saved outputs (execution evidence). Choose another --out.")
+
+_MODULE = (ROOT / "src" / "divvy_transforms.py").read_text()
+
+
+def region(*names):
+    """Return the named '# --- region: x ---' blocks of src/divvy_transforms.py, verbatim."""
+    out = []
+    for n in names:
+        m = re.search(rf"# --- region: {n} -+\n(.*?)# --- end region: {n} -+", _MODULE, re.S)
+        if not m:
+            sys.exit(f"region {n!r} not found in src/divvy_transforms.py")
+        out.append(m.group(1).strip("\n"))
+    return "\n\n\n".join(out)
+
+
 cells = []
 md = lambda s: cells.append(nbf.v4.new_markdown_cell(s.strip("\n")))
 code = lambda s: cells.append(nbf.v4.new_code_cell(s.strip("\n")))
@@ -20,7 +53,7 @@ md("""
 2. Payments per month / quarter / year, and per member by age at account start.
 3. *(Extra credit)* Spend per member vs. average rides per month and monthly riding minutes.
 
-**Star schema** (see `Divvy_Star_Schema.pdf`): `fact_trip`, `fact_payment`; dimensions `dim_rider`, `dim_station` (role-played as start/end), `dim_date`.
+**Star schema** (see `docs/Divvy_Star_Schema.pdf` in the repository): `fact_trip`, `fact_payment`; dimensions `dim_rider`, `dim_station` (role-played as start/end), `dim_date`.
 
 **Before running:** upload `riders.csv`, `payments.csv`, `stations.csv`, `trips.csv` to `<volume>/raw/` in Catalog Explorer, attach a Unity Catalog compute (single node, DBR 13.3 LTS+), edit the three names in the next cell, then *Run all*.
 
@@ -118,6 +151,7 @@ def type_and_check(name):
 ''')
 code('''
 KEYS = {"rider": "rider_id", "payment": "payment_id", "station": "station_id", "trip": "trip_id"}
+PII_COLS = {"rider": ["first", "last", "address"]}   # never displayed: not needed for any analysis
 inspection = {}
 for name in BRONZE_COLS:
     df, fails = type_and_check(name)
@@ -128,7 +162,7 @@ for name in BRONZE_COLS:
     inspection[name] = (stats, fails)
     print(f"\\n=== {name}  ({SOURCE_FILES[name]}) ===")
     df.printSchema()
-    display(df.limit(5))
+    display(df.drop(*PII_COLS.get(name, [])).limit(5))
     print("rows:", stats["rows"], "| distinct keys:", stats["distinct_keys"],
           "| duplicate keys:", stats["rows"] - stats["distinct_keys"])
     print("nulls per column:", {c: stats[f"null_{c}"] for c in cols if stats[f"null_{c}"]})
@@ -205,104 +239,23 @@ md("""
 ## 4. Gold dimensions (PySpark)
 * **Keys:** `rider_key` / `station_key` = `row_number()` over the business ID (deterministic for the same data); `date_key` = `yyyyMMdd`.
 * **Duplicates:** deduplicated by business key with an explicit tie-break; keys whose duplicate rows *disagree* are counted and reported.
-* **Age** = completed years (birthday anniversary respected), NULL if a date is missing or the event is before birth.
+* **Age** = completed years (birthday anniversary respected), NULL if a date is missing or the event is before birth. A 29 February birthday has its anniversary on 28 February in non-leap years.
+* These functions are embedded unchanged from `src/divvy_transforms.py`, where they are unit-tested with synthetic fixtures.
 * Dimensions hold attributes only, no facts. Names/addresses are intentionally left out (PII not needed).
 """)
-code('''
-def bronze(name):
-    return spark.table(tbl(BRONZE_SCHEMA, name))
+code("def bronze(name):\n    return spark.table(tbl(BRONZE_SCHEMA, name))\n\n\n" + region("common", "dimensions"))
 
-def age_years(event_date, birth_date):
-    """Completed years at event_date; NULL when either date is NULL or the event precedes birth."""
-    e, b = F.col(event_date) if isinstance(event_date, str) else event_date, F.col(birth_date)
-    before_bday = (F.month(e) * 100 + F.dayofmonth(e)) < (F.month(b) * 100 + F.dayofmonth(b))
-    return (F.when(e.isNull() | b.isNull() | (e < b), F.lit(None))
-             .otherwise(F.year(e) - F.year(b) - F.when(before_bday, 1).otherwise(0))).cast("int")
-
-def dedupe(df, key, order_cols):
-    """One row per key. Tie-break = order_cols (first wins). Returns (df, number of keys with conflicting rows)."""
-    conflicts = df.dropDuplicates().groupBy(key).count().filter("count > 1").count()
-    w = Window.partitionBy(key).orderBy(*order_cols)
-    return df.withColumn("_rn", F.row_number().over(w)).filter("_rn = 1").drop("_rn"), conflicts
-
-def build_dim_rider():
-    r, conflicts = dedupe(bronze("rider"), "rider_id",
-                          [F.col("account_start_date").desc_nulls_last(), F.col("account_end_date").desc_nulls_last()])
-    dim = r.select(
-        F.row_number().over(Window.orderBy("rider_id")).alias("rider_key"),
-        "rider_id",
-        F.col("birthday").alias("birth_date"),
-        "account_start_date", "account_end_date",
-        F.col("is_member"),                       # current snapshot flag, not historical status
-        age_years("account_start_date", "birthday").alias("age_at_account_start"))
-    return dim, conflicts
-
-def build_dim_station():
-    s, conflicts = dedupe(bronze("station"), "station_id", [F.col("name").asc_nulls_last(), F.col("latitude").asc_nulls_last()])
-    dim = s.select(F.row_number().over(Window.orderBy("station_id")).alias("station_key"),
-                   "station_id", F.col("name").alias("station_name"), "latitude", "longitude")
-    return dim, conflicts
-
-def build_dim_date():
-    t, p = bronze("trip"), bronze("payment")
-    b = (t.agg(F.min(F.to_date("started_at")).alias("t0"), F.max(F.to_date("ended_at")).alias("t1"))
-          .crossJoin(p.agg(F.min("date").alias("p0"), F.max("date").alias("p1")))
-          .select(F.least("t0", "p0").alias("lo"), F.greatest("t1", "p1").alias("hi")).first())
-    d = (spark.range(1).select(F.explode(F.sequence(F.lit(b["lo"]), F.lit(b["hi"]), F.expr("interval 1 day"))).alias("date")))
-    return d.select(
-        F.date_format("date", "yyyyMMdd").cast("int").alias("date_key"),
-        "date",
-        (F.expr("weekday(date)") + 1).alias("day_of_week_num"),          # 1 = Monday ... 7 = Sunday
-        F.date_format("date", "EEEE").alias("day_of_week_name"),
-        F.dayofmonth("date").alias("day_of_month"),
-        F.month("date").alias("month"),
-        F.date_format("date", "MMMM").alias("month_name"),
-        F.quarter("date").alias("quarter"),
-        F.year("date").alias("year"),
-        F.date_format("date", "yyyy-MM").alias("year_month"),
-        (F.expr("weekday(date)") >= 5).alias("is_weekend"))
-''')
 
 # ----------------------------------------------------------------------------- 5
 md("""
 ## 5. Gold facts (PySpark)
 * `fact_trip` — grain: one row per `trip_id`. Left joins to the dimensions so no trip is dropped; unmatched station/rider keys stay NULL and are reported in validation.
 * `fact_payment` — grain: one row per `payment_id`.
-* Trip duration keeps fractional minutes; `duration_quality` flags `NEGATIVE` / `ZERO` rather than silently deleting rows. Timestamps are used exactly as stored in the source (no timezone assumption).
+* Trip duration keeps fractional minutes. `duration_quality` is `OK` only when `0 < seconds <= 86400`; otherwise `NEGATIVE`, `ZERO`, `OVER_24H` (longer than 24 hours) or `MISSING` (NULL). Such rows are flagged, not deleted. Timestamps are used exactly as stored in the source (no timezone assumption).
 * Trips and payments are **never joined to each other** row-by-row; for the extra-credit analysis each is aggregated to rider-month first.
 """)
-code('''
-def build_fact_trip(dim_rider, dim_station):
-    rider = F.broadcast(dim_rider.select("rider_key", "rider_id", "birth_date"))
-    s_start = F.broadcast(dim_station.select(F.col("station_id").alias("start_station_id"), F.col("station_key").alias("start_station_key")))
-    s_end = F.broadcast(dim_station.select(F.col("station_id").alias("end_station_id"), F.col("station_key").alias("end_station_key")))
-    secs = F.col("ended_at").cast("long") - F.col("started_at").cast("long")
-    hr = F.hour("started_at")
-    return (bronze("trip")
-        .join(rider, "rider_id", "left")
-        .join(s_start, "start_station_id", "left")
-        .join(s_end, "end_station_id", "left")
-        .select(
-            "trip_id", "rider_key",
-            F.date_format("started_at", "yyyyMMdd").cast("int").alias("start_date_key"),
-            F.date_format("ended_at", "yyyyMMdd").cast("int").alias("end_date_key"),
-            "start_station_key", "end_station_key", "rideable_type", "started_at", "ended_at",
-            hr.alias("start_hour"),
-            F.when(hr < 6, "Night (00-05)").when(hr < 12, "Morning (06-11)")
-             .when(hr < 18, "Afternoon (12-17)").otherwise("Evening (18-23)").alias("time_band"),
-            secs.alias("ride_duration_seconds"),
-            (secs / 60.0).alias("ride_duration_minutes"),
-            F.when(secs < 0, "NEGATIVE").when(secs == 0, "ZERO").otherwise("OK").alias("duration_quality"),
-            age_years(F.to_date("started_at"), "birth_date").alias("rider_age_at_trip")))
+code(region("facts"))
 
-def build_fact_payment(dim_rider):
-    rider = F.broadcast(dim_rider.select("rider_key", "rider_id"))
-    return (bronze("payment").join(rider, "rider_id", "left")
-        .select("payment_id", "rider_key",
-                F.date_format("date", "yyyyMMdd").cast("int").alias("payment_date_key"),
-                F.col("date").alias("payment_date"),
-                F.col("amount").cast("decimal(10,2)").alias("amount")))
-''')
 
 # ----------------------------------------------------------------------------- 6
 md("""
@@ -321,16 +274,17 @@ def write_gold(df, name):
        .saveAsTable(tbl(GOLD_SCHEMA, name)))
 
 def build_gold():
-    dim_rider, DIM_CONFLICTS["rider"] = build_dim_rider()
-    dim_station, DIM_CONFLICTS["station"] = build_dim_station()
+    dim_rider, DIM_CONFLICTS["rider"] = build_dim_rider(bronze("rider"))
+    dim_station, DIM_CONFLICTS["station"] = build_dim_station(bronze("station"))
     write_gold(dim_rider, "dim_rider")
     write_gold(dim_station, "dim_station")
-    write_gold(build_dim_date(), "dim_date")
-    write_gold(build_fact_trip(gold("dim_rider"), gold("dim_station")), "fact_trip")
-    write_gold(build_fact_payment(gold("dim_rider")), "fact_payment")
+    write_gold(build_dim_date(bronze("trip"), bronze("payment")), "dim_date")
+    write_gold(build_fact_trip(bronze("trip"), gold("dim_rider"), gold("dim_station")), "fact_trip")
+    write_gold(build_fact_payment(bronze("payment"), gold("dim_rider")), "fact_payment")
     return {n: gold(n).count() for n in GOLD_TABLES}
 
 GOLD_COUNTS_RUN1 = build_gold()
+FINGERPRINT_RUN1 = {n: table_fingerprint(gold(n)) for n in GOLD_TABLES}
 print(GOLD_COUNTS_RUN1)
 print("keys with conflicting duplicate source rows:", DIM_CONFLICTS)
 ''')
@@ -347,11 +301,15 @@ display(gold("dim_rider").limit(5)); display(gold("dim_station").limit(5)); disp
 # ----------------------------------------------------------------------------- 7
 md("## 7. Validation")
 code('''
+# ASSERT = a real test that fails the run. INFO = a reported diagnostic that is never counted as a pass.
 results = []
 def check(name, ok, detail=""):
-    results.append((name, bool(ok), str(detail)))
+    results.append(("ASSERT", name, "PASS" if ok else "FAIL", str(detail)))
+def info(name, detail):
+    results.append(("INFO", name, "-", str(detail)))
 
 ft, fp, dr, ds, dd = (gold(n) for n in ["fact_trip", "fact_payment", "dim_rider", "dim_station", "dim_date"])
+n = lambda df, cond: df.filter(cond).count()
 
 # Row-count lineage: CSV -> Bronze files -> Bronze tables -> Gold
 check("trip: csv = bronze files = bronze table = fact_trip",
@@ -370,21 +328,31 @@ for df, key, nm in [(ft, "trip_id", "fact_trip.trip_id"), (fp, "payment_id", "fa
     check(f"unique {nm}", dups == 0, f"duplicate keys: {dups}")
 check("no conflicting duplicate source rows in dimensions", sum(DIM_CONFLICTS.values()) == 0, DIM_CONFLICTS)
 
-# Unmatched / NULL references
-n = lambda df, cond: df.filter(cond).count()
+# Required keys / referential integrity
 check("fact_trip.rider_key not NULL", n(ft, "rider_key IS NULL") == 0, n(ft, "rider_key IS NULL"))
 check("fact_payment.rider_key not NULL", n(fp, "rider_key IS NULL") == 0, n(fp, "rider_key IS NULL"))
 check("fact_trip station keys not NULL", n(ft, "start_station_key IS NULL OR end_station_key IS NULL") == 0,
       f"start NULL={n(ft, 'start_station_key IS NULL')}, end NULL={n(ft, 'end_station_key IS NULL')}  (any NULL = station id absent from stations.csv)")
 check("fact_trip.rider_age_at_trip not NULL", n(ft, "rider_age_at_trip IS NULL") == 0, n(ft, "rider_age_at_trip IS NULL"))
+check("rider_age_at_trip in 0..110", n(ft, "rider_age_at_trip < 0 OR rider_age_at_trip > 110") == 0)
 check("every date key exists in dim_date",
       ft.join(dd.select(F.col("date_key").alias("k")), ft.start_date_key == F.col("k"), "left_anti").count() == 0 and
       ft.join(dd.select(F.col("date_key").alias("k")), ft.end_date_key == F.col("k"), "left_anti").count() == 0 and
       fp.join(dd.select(F.col("date_key").alias("k")), fp.payment_date_key == F.col("k"), "left_anti").count() == 0)
-# Informational (a finding, not a failure): impossible durations are flagged, not removed
-q = {r["duration_quality"]: r["n"] for r in ft.groupBy("duration_quality").agg(F.count("*").alias("n")).collect()}
-check("duration_quality counts (info: NEGATIVE/ZERO are flagged, excluded from analytics)", True, q)
-check("rider_age_at_trip in 0..110", n(ft, "rider_age_at_trip < 0 OR rider_age_at_trip > 110") == 0)
+lo, hi, n_days = dd.agg(F.min("date"), F.max("date"), F.count(F.lit(1))).first()
+check("dim_date has no gaps between its first and last date", (hi - lo).days + 1 == n_days, f"{lo} .. {hi}, {n_days} days")
+
+# Duration quality: a rule that can fail (OK means 0 < seconds <= 86400)
+dq = {r["duration_quality"]: r["n"] for r in ft.groupBy("duration_quality").agg(F.count("*").alias("n")).collect()}
+check("duration_quality only uses the defined categories", set(dq) <= set(DURATION_CATEGORIES), sorted(dq))
+check("duration_quality categories add up to fact_trip", sum(dq.values()) == GOLD_COUNTS_RUN1["fact_trip"], sum(dq.values()))
+check("every OK trip has 0 < seconds <= 86400, no other trip does",
+      n(ft, "duration_quality = 'OK' AND NOT (ride_duration_seconds > 0 AND ride_duration_seconds <= 86400)") == 0 and
+      n(ft, "duration_quality <> 'OK' AND ride_duration_seconds > 0 AND ride_duration_seconds <= 86400") == 0)
+valid_from_bronze = n(bronze("trip").select((F.col("ended_at").cast("long") - F.col("started_at").cast("long")).alias("s")),
+                      "s > 0 AND s <= 86400")
+check("valid trip count = independent count from Bronze", dq.get("OK", 0) == valid_from_bronze, f"OK={dq.get('OK', 0):,} bronze={valid_from_bronze:,}")
+info("duration_quality counts (flagged trips stay in fact_trip, excluded from duration averages)", dq)
 
 # Payment amounts: numeric and reconcile with the CSV
 csv_sum = type_and_check("payment")[0].agg(F.sum("amount")).first()[0]
@@ -392,25 +360,33 @@ fact_sum = fp.agg(F.sum("amount")).first()[0]
 check("payment amount: CSV sum = fact_payment sum", csv_sum == fact_sum, f"csv={csv_sum} fact={fact_sum}")
 check("payment amount: no NULL / non-positive", n(fp, "amount IS NULL OR amount <= 0") == 0, n(fp, "amount IS NULL OR amount <= 0"))
 
-# Gold overwrite is idempotent: run the whole Gold build a second time, compare counts
-GOLD_COUNTS_RUN2 = build_gold()
-check("Gold re-run (overwrite) gives identical counts", GOLD_COUNTS_RUN1 == GOLD_COUNTS_RUN2, GOLD_COUNTS_RUN2)
+# Delta format
 check("Gold tables are Delta",
       all(spark.sql(f"DESCRIBE DETAIL {tbl(GOLD_SCHEMA, t)}").first()["format"] == "delta" for t in GOLD_TABLES))
 
-res = spark.createDataFrame(results, "check STRING, passed BOOLEAN, detail STRING")
+# Rebuild safety: run the whole Gold build a second time; compare row counts AND content fingerprints
+GOLD_COUNTS_RUN2 = build_gold()
+FINGERPRINT_RUN2 = {t: table_fingerprint(gold(t)) for t in GOLD_TABLES}
+check("Gold re-run (overwrite) gives identical row counts", GOLD_COUNTS_RUN1 == GOLD_COUNTS_RUN2, GOLD_COUNTS_RUN2)
+check("Gold re-run gives identical content fingerprints (all columns, all 5 tables)",
+      FINGERPRINT_RUN1 == FINGERPRINT_RUN2, {t: FINGERPRINT_RUN2[t][1][-8:] for t in GOLD_TABLES})
+
+res = spark.createDataFrame(results, "kind STRING, check STRING, result STRING, detail STRING")
 res.show(100, False)
-assert all(r[1] for r in results), "Some validation checks failed - see the table above."
-print("ALL VALIDATION CHECKS PASSED")
+asserts = [r for r in results if r[0] == "ASSERT"]
+failed = [r for r in asserts if r[2] != "PASS"]
+print(f"{len(asserts) - len(failed)} of {len(asserts)} assertions passed; {len(results) - len(asserts)} informational diagnostic(s) not counted.")
+assert not failed, f"Validation failed: {[r[1] for r in failed]}"
+print("ALL VALIDATION ASSERTIONS PASSED")
 ''')
 md("""
-*Reading the result:* an unmatched station key would not be an error in itself (stations can be retired or missing from the station list), which is why the check reports how many are NULL. `duration_quality` shows how many trips have zero or negative duration; they stay in the fact table but are excluded from the duration analytics below.
+*Reading the result:* only `ASSERT` rows can fail the run; `INFO` rows report a finding and are never counted as passes. An unmatched station key would not be an error in itself (stations can be retired or missing from the station list), which is why that check prints how many are NULL. Trips that are `NEGATIVE`, `ZERO`, `OVER_24H` or `MISSING` stay in the fact table but are excluded from the duration analytics below. The re-run check compares row counts and an order-independent hash of every column; it is a strong consistency check, not a cryptographic proof.
 """)
 
 # ----------------------------------------------------------------------------- 8
 md("""
 ## 8. Analytics
-Duration queries use only `duration_quality = 'OK'` trips. `is_member` is the rider's **current** flag in the source.
+Duration queries use only `duration_quality = 'OK'` trips (`0 < duration <= 24 hours`). `is_member` is the rider's **current** flag in the source.
 """)
 code('''
 FT, FP, DR, DS, DD = (tbl(GOLD_SCHEMA, n) for n in ["fact_trip", "fact_payment", "dim_rider", "dim_station", "dim_date"])
@@ -531,10 +507,10 @@ md("""
 * `is_member` is the rider's *current* flag; the data has no membership history, so member-vs-casual results describe today's status.
 * Trips cover one year (Feb 2021 – Jan 2022); payments span 2013–2022. Time-based trip analytics and the extra-credit comparison use that overlap only.
 * The source links payments to riders, not to trips.
-* Zero/negative-duration trips are flagged in `duration_quality` and excluded from duration averages.
+* Negative, zero, over-24-hour and missing-duration trips are flagged in `duration_quality` and excluded from duration averages; they stay in `fact_trip`.
 * Age uses completed years at the event date. Station IDs are strings.
 
-**Re-running:** every write is `overwrite` (Bronze files, Bronze tables via `INSERT OVERWRITE`, Gold via `saveAsTable`), so running the notebook again replaces the data instead of adding to it; section 7 proves it by running the Gold build twice and comparing counts. Only the project's own tables/folders are touched.
+**Re-running:** every write is `overwrite` (Bronze files, Bronze tables via `INSERT OVERWRITE`, Gold via `saveAsTable`), so running the notebook again replaces the data instead of adding to it; section 7 runs the Gold build twice and compares row counts and content fingerprints. Only the project's own tables/folders are touched.
 """)
 
 nb = nbf.v4.new_notebook(cells=cells)

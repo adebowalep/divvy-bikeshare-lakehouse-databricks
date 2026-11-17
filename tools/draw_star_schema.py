@@ -1,9 +1,11 @@
-"""Draws Divvy_Star_Schema.pdf (vector) with reportlab. Run: python draw_star_schema.py <out.pdf>"""
+"""Draws the star-schema diagram (vector PDF) with reportlab.
+Run: python tools/draw_star_schema.py [out.pdf]   (default: docs/Divvy_Star_Schema.pdf)"""
 import sys
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor, white, black
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "Divvy_Star_Schema.pdf"
+from pathlib import Path
+OUT = sys.argv[1] if len(sys.argv) > 1 else str(Path(__file__).resolve().parents[1] / "docs" / "Divvy_Star_Schema.pdf")
 W, H = 2060, 1100
 ROW, HEAD = 26, 40
 FACT, DIM = HexColor("#1f4e8c"), HexColor("#2e7d5b")
@@ -103,7 +105,7 @@ c.drawString(40, H-100, "Legend:  PK = primary key (yellow)   FK = foreign key (
 grains = [
  ("Grain", True),
  ("fact_trip: one row per trip (trip_id).  Measures: ride_duration_seconds / ride_duration_minutes,", False),
- ("   rider_age_at_trip (completed years at trip start). duration_quality flags OK / ZERO / NEGATIVE.", False),
+ ("   rider_age_at_trip (completed years at trip start). duration_quality: OK (0 < s <= 24h) / NEGATIVE / ZERO / OVER_24H / MISSING.", False),
  ("fact_payment: one row per payment (payment_id).  Measure: amount.", False),
  ("dim_rider: one row per rider.   dim_station: one row per station.   dim_date: one row per calendar date.", False),
  ("Notes", True),

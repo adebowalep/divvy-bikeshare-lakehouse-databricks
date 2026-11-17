@@ -1,10 +1,23 @@
 """Renders groups of cells from the EXPORTED (executed) notebook into clean PNGs.
-Nothing is edited: code and outputs are exactly those stored in the .ipynb. Usage: render_evidence.py <nb> <outdir>"""
-import sys, os, copy, subprocess, tempfile, nbformat
+These are renders of the outputs stored in the .ipynb, NOT screenshots of the Databricks UI.
+Nothing is edited: code and outputs are exactly those stored in the notebook.
+
+Usage: python tools/render_evidence.py NOTEBOOK OUTDIR [--only NAME_PREFIX ...] [--browser PATH]"""
+import argparse, os, copy, subprocess, sys, tempfile
+from pathlib import Path
+import nbformat
 from nbconvert import HTMLExporter
-nb_path, out = sys.argv[1:3]; PROF = tempfile.mkdtemp(prefix="edgeprof_"); os.makedirs(out, exist_ok=True)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _common import find_browser, require_file
+ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+ap.add_argument("notebook", type=Path); ap.add_argument("outdir", type=Path)
+ap.add_argument("--only", nargs="*", default=None, help="render only groups whose name starts with one of these prefixes")
+ap.add_argument("--browser", default=None)
+args = ap.parse_args()
+nb_path, out = str(require_file(args.notebook)), str(args.outdir)
+PROF = tempfile.mkdtemp(prefix="edgeprof_"); os.makedirs(out, exist_ok=True)
 nb = nbformat.read(nb_path, as_version=4)
-EDGE = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+EDGE = find_browser(args.browser)
 # (filename, cell indexes, title, window height)
 GROUPS = [
  ("15_config_and_file_check", [1,2,3], 900),
@@ -20,6 +33,7 @@ GROUPS = [
 ]
 CSS = "<style>body{background:#fff!important;font-family:-apple-system,Helvetica,Arial,sans-serif}.jp-Notebook{padding:24px 40px!important;max-width:1500px}.jp-InputPrompt,.jp-OutputPrompt{display:none!important}.jp-Cell{margin-bottom:14px}</style>"
 for name, idx, h in GROUPS:
+    if args.only and not any(name.startswith(p) for p in args.only): continue
     sub = nbformat.v4.new_notebook(); sub.metadata = nb.metadata
     sub.cells = [copy.deepcopy(nb.cells[i]) for i in idx]
     for c in sub.cells: c.get("metadata", {}).clear()

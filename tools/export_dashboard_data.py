@@ -1,12 +1,31 @@
 """Exports small summary tables (JSON) from the Gold Delta tables for the static dashboard.
-Usage: export_dashboard_data.py <gold_db_dir> <out.json>
-<gold_db_dir> holds the Gold tables as Delta folders (dim_*, fact_*), e.g. a local run's warehouse/divvy_gold.db.
-Same SQL logic as notebook section 8; no raw rows are exported."""
-import sys, os, json
+
+Usage: python tools/export_dashboard_data.py GOLD_DB_DIR [--out dashboard/data.json] [--force]
+GOLD_DB_DIR holds the Gold tables as Delta folders (dim_*, fact_*), e.g. the warehouse/divvy_gold.db
+folder of a local run of the notebook (tools/local_test.py). Same SQL logic as notebook section 8;
+no raw rows are exported. The output is validated before it replaces an existing file."""
+import argparse
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _common import ROOT
+
+ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+ap.add_argument("gold_dir", type=Path)
+ap.add_argument("--out", type=Path, default=ROOT / "dashboard" / "data.json")
+ap.add_argument("--force", action="store_true", help="skip the consistency validation (not recommended)")
+args = ap.parse_args()
+TABLES = ["dim_rider", "dim_station", "dim_date", "fact_trip", "fact_payment"]
+missing = [t for t in TABLES if not (args.gold_dir / t / "_delta_log").is_dir()]
+if missing:
+    sys.exit(f"{args.gold_dir} is not a folder of Gold Delta tables; missing: {missing}")
+
 from pyspark.sql import SparkSession
 from delta import configure_spark_with_delta_pip
 
-gold, out = sys.argv[1:3]
 b = (SparkSession.builder.master("local[4]").appName("dash-export").config("spark.driver.memory", "6g")
      .config("spark.sql.shuffle.partitions", "16").config("spark.ui.enabled", "false").config("spark.sql.session.timeZone", "UTC").config("spark.driver.extraJavaOptions", "-Duser.timezone=UTC")
      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
@@ -14,8 +33,8 @@ b = (SparkSession.builder.master("local[4]").appName("dash-export").config("spar
      .config("spark.pyspark.python", sys.executable))
 spark = configure_spark_with_delta_pip(b).getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
-for t in ["dim_rider", "dim_station", "dim_date", "fact_trip", "fact_payment"]:
-    spark.read.format("delta").load(os.path.join(gold, t)).createOrReplaceTempView(t)
+for t in TABLES:
+    spark.read.format("delta").load(str(args.gold_dir / t)).createOrReplaceTempView(t)
 
 def q(sql):
     return [r.asDict() for r in spark.sql(sql).collect()]
@@ -30,7 +49,9 @@ D["kpi"] = q("""SELECT (SELECT COUNT(*) FROM fact_trip) trips,
   (SELECT COUNT(*) FROM dim_rider) riders, (SELECT COUNT(*) FROM dim_station) stations,
   (SELECT AVG(CASE WHEN is_member THEN 1.0 ELSE 0.0 END) FROM dim_rider) member_share,
   (SELECT AVG(ride_duration_minutes) FROM fact_trip WHERE duration_quality='OK') avg_minutes,
-  (SELECT MEDIAN(ride_duration_minutes) FROM fact_trip WHERE duration_quality='OK') median_minutes""")[0]
+  (SELECT MEDIAN(ride_duration_minutes) FROM fact_trip WHERE duration_quality='OK') median_minutes,
+  (SELECT COUNT(*) FROM fact_trip WHERE rider_key IS NULL OR start_station_key IS NULL OR end_station_key IS NULL) unmatched_trip_keys,
+  (SELECT COUNT(*) FROM fact_payment WHERE rider_key IS NULL) unmatched_payment_keys""")[0]
 D["quality"] = q("SELECT duration_quality q, COUNT(*) n FROM fact_trip GROUP BY 1")
 D["weekday_band"] = q("""SELECT d.day_of_week_num dow, d.day_of_week_name weekday, f.time_band band, COUNT(*) trips,
   AVG(f.ride_duration_minutes) avg_min, SUM(f.ride_duration_minutes) total_min
@@ -76,5 +97,22 @@ D["spend_by_rides"] = q("""SELECT CASE WHEN avg_rides=0 THEN '0' WHEN avg_rides<
   COUNT(*) riders, AVG(spend) avg_spend FROM rider_summary GROUP BY 1 ORDER BY MIN(avg_rides)""")
 D["spend_by_minutes"] = q("""SELECT CASE WHEN avg_min=0 THEN '0' WHEN avg_min<10 THEN '<10' WHEN avg_min<30 THEN '10-30' WHEN avg_min<60 THEN '30-60' ELSE '60+' END band,
   COUNT(*) riders, AVG(spend) avg_spend FROM rider_summary GROUP BY 1 ORDER BY MIN(avg_min)""")
-json.dump(D, open(out, "w"), default=lambda o: float(o), indent=1)
-print("wrote", out, {k: (len(v) if isinstance(v, list) else v) for k, v in D.items()})
+# ---- validate before replacing the committed file -------------------------------------------------
+problems = []
+K = D["kpi"]
+if sum(r["n"] for r in D["quality"]) != K["trips"]: problems.append("quality categories do not add up to trips")
+if {r["q"]: r["n"] for r in D["quality"]}.get("OK", 0) != K["valid_trips"]: problems.append("OK count differs from valid_trips")
+if sum(r["trips"] for r in D["weekday_band"]) != K["valid_trips"]: problems.append("weekday_band trips differ from valid_trips")
+if sum(r["trips"] for r in D["hourly"]) != K["valid_trips"]: problems.append("hourly trips differ from valid_trips")
+if sum(r["trips"] for r in D["monthly_trips"]) != K["valid_trips"]: problems.append("monthly trips differ from valid_trips")
+if sum(r["trips"] for r in D["age_member"]) != K["valid_trips"]: problems.append("age_member trips differ from valid_trips")
+if abs(sum(r["total"] for r in D["pay_year"]) - K["total_paid"]) > 0.01: problems.append("yearly payments differ from total_paid")
+if abs(sum(r["total"] for r in D["pay_quarter"]) - K["total_paid"]) > 0.01: problems.append("quarterly payments differ from total_paid")
+if problems and not args.force:
+    sys.exit("Validation failed, dashboard/data.json NOT replaced:\n  " + "\n  ".join(problems))
+args.out.parent.mkdir(parents=True, exist_ok=True)
+with tempfile.NamedTemporaryFile("w", dir=args.out.parent, suffix=".tmp", delete=False) as fh:
+    json.dump(D, fh, default=lambda o: float(o), indent=1)
+Path(fh.name).replace(args.out)
+print("validation: all reconciliation checks passed" if not problems else "validation SKIPPED (--force)")
+print("wrote", args.out, {k: (len(v) if isinstance(v, list) else v) for k, v in D.items()})

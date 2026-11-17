@@ -1,8 +1,18 @@
 """Runs the notebook's code cells on a LOCAL Spark+Delta session against the real CSVs (test harness only).
-Usage: local_test.py <notebook.ipynb> <data_dir> <work_dir>
+Usage: python tools/local_test.py NOTEBOOK DATA_DIR WORK_DIR
 Replaces only the config lines (catalog/volume paths) and dbutils.ls; all transformation code is the notebook's own."""
-import sys, os, json, time
-nb, data, work = sys.argv[1:4]
+import argparse, sys, os, json, time
+from pathlib import Path
+ap = argparse.ArgumentParser(description=__doc__)
+ap.add_argument("notebook", type=Path, help="notebook to run, e.g. notebooks/Divvy_Databricks_Lakehouse.ipynb")
+ap.add_argument("data_dir", type=Path, help="folder holding riders.csv, payments.csv, stations.csv, trips.csv")
+ap.add_argument("work_dir", type=Path, help="scratch folder for the local volume and warehouse (needs ~1.5 GB free)")
+args = ap.parse_args()
+nb, data, work = str(args.notebook.resolve()), args.data_dir.resolve(), args.work_dir.resolve()
+if not args.notebook.is_file(): sys.exit(f"Notebook not found: {args.notebook}")
+missing = [f"{f}.csv" for f in ("riders", "payments", "stations", "trips") if not (data / f"{f}.csv").is_file()]
+if missing: sys.exit(f"Missing in {data}: {missing}")
+work = str(work); data = str(data)
 os.environ["PYSPARK_PYTHON"] = os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 os.makedirs(f"{work}/vol/raw", exist_ok=True)
 for f in ("riders", "payments", "stations", "trips"):
